@@ -64,6 +64,7 @@ EGLBoolean wlEglSwapBuffersWithDamageHook(EGLDisplay eglDisplay, EGLSurface eglS
 
     surface = eglSurface;
 
+    surface->homeThread = pthread_self();
     wlEglResizeSurfaceIfRequired(display, data, surface);
 
     if (surface->pendingSwapIntervalUpdate == EGL_TRUE) {

@@ -1523,6 +1523,9 @@ create_surface_context(WlEglSurface *surface)
         window->attached_height = winHeight;
     }
 
+    /* Set the home thread. */
+    surface->homeThread = pthread_self();
+
     return EGL_SUCCESS;
 
 fail:
@@ -1661,6 +1664,7 @@ static void
 resize_callback(struct wl_egl_window *window, void *data)
 {
     WlEglDisplay      *display = NULL;
+    WlEglPlatformData     *pData = NULL;
     WlEglSurface      *surface = (WlEglSurface *)data;
 
     if (!window || !surface) {
@@ -1668,6 +1672,7 @@ resize_callback(struct wl_egl_window *window, void *data)
     }
 
     display = surface->wlEglDpy;
+    pData = display->data;
     if (!wlEglIsWaylandDisplay(display->nativeDpy) ||
         !wlEglIsWaylandWindowValid(surface->wlEglWin)) {
         return;
@@ -1685,6 +1690,11 @@ resize_callback(struct wl_egl_window *window, void *data)
     }
     
     pthread_mutex_unlock(&surface->mutexLock);
+
+    /* If the surface's home context is active, resize immediately. */
+    if (pthread_self() == surface->homeThread) {
+        wlEglResizeSurfaceIfRequired(display, pData, surface);
+    }
 }
 
 static EGLBoolean validateSurfaceAttrib(EGLAttrib attrib, EGLAttrib value)

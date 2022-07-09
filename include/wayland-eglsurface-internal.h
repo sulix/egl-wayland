@@ -144,6 +144,15 @@ struct WlEglSurfaceRec {
      * eglSwapBuffers(), so just set a resize flag.
      */
     EGLBoolean isResized;
+
+    /* Keep a reference to the surface's "home thread". 
+     * This is the thread we run resizes on: it defaults to the thread which
+     * created the surface, but will update to the last thread to call
+     * SwapBuffers. This is our best guess as to which thread is doing the
+     * rendering, and since we break all other threads' contexts on resize
+     * our best bet for keeping as many applications functional as possible.
+     */
+    pthread_t homeThread;
 };
 
 void wlEglResizeSurfaceIfRequired(WlEglDisplay *display,
